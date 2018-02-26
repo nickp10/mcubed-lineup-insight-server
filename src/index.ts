@@ -1,3 +1,5 @@
+#! /usr/bin/env node
+
 import * as args from "./args";
 import * as express from "express";
 

@@ -6,11 +6,10 @@ const sourcemaps = require("gulp-sourcemaps");
 const typescript = require("gulp-typescript");
 const uglify = require("gulp-uglify");
 
-const args = argv
-    .option({ name: "env", short: "e", type: "string" })
-    .run();
+const args = argv.option({ name: "env", short: "e", type: "string" }).run();
 const isDebug = args.options["env"] === "debug";
-const dest = isDebug ? "./debug" : "./build";
+const destDirname = isDebug ? "debug" : "build";
+const dest = `./${destDirname}`;
 const tsconfig = typescript("tsconfig.json");
 
 gulp.task("compile", () => {
@@ -19,9 +18,11 @@ gulp.task("compile", () => {
         return src.pipe(sourcemaps.init())
             .pipe(tsconfig)
             .pipe(sourcemaps.mapSources((sourcePath, file) => {
-                var from = path.dirname(file.path);
-                var to = path.resolve(path.join(__dirname, "build"));
-                return path.join(path.relative(from, to), sourcePath);
+                const to = path.dirname(file.path);
+                const buildToRoot = path.relative(to, __dirname);
+                const rootToSource = path.relative(__dirname, to);
+                const fileName = path.basename(sourcePath);
+                return path.join(buildToRoot, rootToSource, fileName);
             }))
             .pipe(sourcemaps.write(""))
             .pipe(gulp.dest(dest));
