@@ -22,12 +22,15 @@
     "build-debug": "gulp build -e debug",
     "compile": "gulp compile",
     "compile-debug": "gulp compile -e debug",
+    "compile-test": "gulp compile-test -e debug",
     "prepare": "npm run build",
-    "start": "node build/index.js"
+    "start": "node build/index.js",
+    "test": "gulp test -e debug"
   },
   "dependencies": {
     "argv": "0.0.2",
-    "express": "^4.16.2"
+    "express": "^4.16.2",
+    "mcubed-lineup-insight-data": "^2.0.0"
   },
   "devDependencies": {
     "@types/argv": "0.0.4",
@@ -37,6 +40,7 @@
     "babel-preset-env": "^1.6.1",
     "gulp": "^3.9.1",
     "gulp-babel": "^7.0.1",
+    "gulp-mocha": "^5.0.0",
     "gulp-sourcemaps": "^2.6.4",
     "gulp-typescript": "^4.0.1",
     "gulp-uglify": "^3.0.0",
