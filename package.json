@@ -30,7 +30,7 @@
   "dependencies": {
     "argv": "0.0.2",
     "express": "^4.16.2",
-    "mcubed-lineup-insight-data": "^2.0.0"
+    "mcubed-lineup-insight-data": "^3.0.0"
   },
   "devDependencies": {
     "@types/argv": "0.0.4",
