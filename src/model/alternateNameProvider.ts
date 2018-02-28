@@ -50,7 +50,7 @@ export default class AlternateNameProvider implements IAlternateNameProvider {
             for (let i = 0; i < alternateNames.length; i++) {
                 const alternateName = alternateNames[i];
                 if (alternateName.contestName && alternateName.externalName) {
-                    this.alternateNames.set(alternateName.externalName, alternateName.contestName);
+                    this.alternateNames.set(alternateName.externalName.toLowerCase(), alternateName.contestName);
                 }
             }
         }

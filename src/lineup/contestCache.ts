@@ -23,7 +23,7 @@ export default class ContestCache {
         this.lastUpdateTime = new Date();
         log.info(`Start retrieving contest list`);
         try {
-            const contests = await insightData.getContestList(undefined, undefined);
+            const contests = await insightData.getContestList();
             log.info(`Finished retrieving contest list`);
             return contests;
         } catch (error) {
