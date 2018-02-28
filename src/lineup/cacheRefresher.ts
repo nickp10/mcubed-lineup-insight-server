@@ -51,7 +51,7 @@ export default class CacheRefresher {
         // Refresh data
         const contests = await this.contestCache.refreshContests();
         this.setupPlayerInsightCacheTimers(contests);
-        this.lineupAggregator.cacheUpdated();
+        await this.lineupAggregator.cacheUpdated();
     }
 
     async refreshPlayerInsightCache(contestType: ContestType, sport: Sport): Promise<void> {
@@ -69,7 +69,7 @@ export default class CacheRefresher {
 
         // Refresh data
         await this.playerInsightCache.refreshPlayerInsight(contestType, sport);
-        this.lineupAggregator.cacheUpdatedForContestTypeAndSport(contestType, sport);
+        await this.lineupAggregator.cacheUpdatedForContestTypeAndSport(contestType, sport);
     }
 
     getContestTimers(contestType: ContestType): Map<Sport, NodeJS.Timer> {
