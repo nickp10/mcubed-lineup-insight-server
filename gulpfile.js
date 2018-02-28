@@ -30,7 +30,11 @@ gulp.task("compile", () => {
     } else {
         return src.pipe(tsconfig())
             .pipe(babel({
-                presets: ["env"]
+                presets: [
+                    ["env", {
+                        "useBuiltIns": "usage"
+                    }]
+                ]
             }))
             .pipe(uglify())
             .pipe(gulp.dest(dest));
