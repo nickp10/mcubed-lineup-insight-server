@@ -118,27 +118,16 @@ export default class CacheRefresher {
         }
     }
 
-    private contestUpdateHours: number[] = [ 0, 1, 2, 3, 5, 9, 13, 17, 19, 21, 23 ];
     private getNextContestUpdateTime(now: Date): Date {
-        const nowMoment = moment(now);
-        const hour = nowMoment.hour();
-        let nextHour = this.contestUpdateHours[0];
-        for (let i = 0; i < this.contestUpdateHours.length; i++) {
-            const contestUpdateHour = this.contestUpdateHours[i];
-            if (contestUpdateHour > hour) {
-                nextHour = contestUpdateHour;
-                break;
-            }
+        const nextUpdateMoment = moment(now);
+        nextUpdateMoment.add(1, "hours");
+        if (nextUpdateMoment.minute() === 59) {
+            nextUpdateMoment.add(1, "minutes");
         }
-        const updateMoment = moment(now);
-        if (hour > nextHour) {
-            updateMoment.add(1, "days");
-        }
-        updateMoment.hour(nextHour);
-        updateMoment.minute(0);
-        updateMoment.second(0);
-        updateMoment.millisecond(0);
-        return updateMoment.toDate();
+        nextUpdateMoment.minute(0);
+        nextUpdateMoment.second(0);
+        nextUpdateMoment.millisecond(0);
+        return nextUpdateMoment.toDate();
     }
 
     private millisInHour: number = 3600000;
