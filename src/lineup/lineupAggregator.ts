@@ -1,5 +1,5 @@
 import { IAlternateNameProvider } from "../interfaces";
-import { IContest, IPlayer, IPlayerCard, ITeam, ContestType, Sport } from "mcubed-lineup-insight-data/build/interfaces";
+import { IContest, IPlayerCard, ContestType, Sport } from "mcubed-lineup-insight-data/build/interfaces";
 import CacheRefresher from "./cacheRefresher";
 import ContestCache from "./contestCache";
 import log from "../log";
@@ -8,12 +8,13 @@ import PlayerCardService from "./playerCardService";
 import PlayerMap from "../model/playerMap";
 
 export default class LineupAggregator {
-    alternateNameProvider: IAlternateNameProvider;
-    contestCache: ContestCache;
-    mergedPlayerInsight: IContest[];
-    playerCardService: PlayerCardService;
-    playerInsightCache: PlayerInsightCache;
-    refresher: CacheRefresher;
+    private alternateNameProvider: IAlternateNameProvider;
+    private contestCache: ContestCache;
+    private mergedPlayerInsight: IContest[];
+    private playerCardService: PlayerCardService;
+    private playerInsightCache: PlayerInsightCache;
+    private pointsPerDollarMultipliers: Map<ContestType, number>;
+    private refresher: CacheRefresher;
 
     constructor(alternateNameProvider: IAlternateNameProvider) {
         this.alternateNameProvider = alternateNameProvider;
@@ -21,6 +22,10 @@ export default class LineupAggregator {
         this.mergedPlayerInsight = [];
         this.playerCardService = new PlayerCardService();
         this.playerInsightCache = new PlayerInsightCache();
+        this.pointsPerDollarMultipliers = new Map<ContestType, number>();
+        this.pointsPerDollarMultipliers.set(ContestType.DraftKings, 1000);
+        this.pointsPerDollarMultipliers.set(ContestType.FanDuel, 1000);
+        this.pointsPerDollarMultipliers.set(ContestType.Yahoo, 1);
         this.refresher = new CacheRefresher(this, this.contestCache, this.playerInsightCache);
     }
 
@@ -70,6 +75,7 @@ export default class LineupAggregator {
             await playerMap.mergePlayer(player, this.alternateNameProvider);
         }
         await this.saveMissingPlayers(contest, playerMap, this.alternateNameProvider);
+        playerMap.performPlayerCalculations(this.pointsPerDollarMultipliers.get(contest.contestType));
         this.mergedPlayerInsight.push(contest);
         contest.playerDataLastUpdateTime = this.playerInsightCache.getLastUpdateTime(contest.contestType, contest.sport);
         contest.playerDataNextUpdateTime = this.playerInsightCache.getNextUpdateTime(contest.contestType, contest.sport);

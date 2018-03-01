@@ -1,17 +1,17 @@
-import { IAlternateNameProvider } from "../interfaces";
-import { IContest, IPlayer, ITeam } from "mcubed-lineup-insight-data/build/interfaces";
+import { IAlternateNameProvider, IServerPlayer } from "../interfaces";
+import { IContest, IPlayer, ITeam, IPlayerStats } from "mcubed-lineup-insight-data/build/interfaces";
 
 export default class PlayerMap {
-    players: Map<string, IPlayer>;
+    private players: Map<string, IServerPlayer>;
     unmergedPlayers: IPlayer[];
 
     constructor(contest: IContest) {
-        this.players = new Map<string, IPlayer>();
+        this.players = new Map<string, IServerPlayer>();
         this.unmergedPlayers = [];
         this.addPlayersFromContest(contest);
     }
 
-    addPlayersFromContest(contest: IContest): void {
+    private addPlayersFromContest(contest: IContest): void {
         const games = contest.games;
         if (Array.isArray(games)) {
             for (let i = 0; i < games.length; i++) {
@@ -26,7 +26,7 @@ export default class PlayerMap {
         }
     }
 
-    addPlayersFromTeam(team: ITeam): void {
+    private addPlayersFromTeam(team: ITeam): void {
         const players = team.players;
         if (Array.isArray(players)) {
             for (let i = 0; i < players.length; i++) {
@@ -44,7 +44,7 @@ export default class PlayerMap {
         this.unmergedPlayers = [];
     }
 
-    async getPlayer(team: string, name: string, alternateNameProvider: IAlternateNameProvider): Promise<IPlayer> {
+    private async getPlayer(team: string, name: string, alternateNameProvider: IAlternateNameProvider): Promise<IServerPlayer> {
         const player = this.players.get(`${team}-${name}`.toLowerCase());
         if (!player && alternateNameProvider) {
             const alternateName = await alternateNameProvider.getAlternateName(name);
@@ -106,5 +106,40 @@ export default class PlayerMap {
 
     private isBattingOrder(battingOrder: string): boolean {
         return battingOrder && "na" !== battingOrder.toLowerCase();
+    }
+
+    performPlayerCalculations(pointsPerDollarMultiplier: number): void {
+        const tempPlayers: IServerPlayer[] = [];
+        for (const [name, player] of this.players.entries()) {
+            player.isPlaying = player.isStarter || player.isProbablePitcher;
+            player.likability = 0;
+            player.projectedCeiling = this.performSinglePlayerCalculation(player, ps => ps.projectedCeiling);
+            player.projectedFloor = this.performSinglePlayerCalculation(player, ps => ps.projectedFloor);
+            player.projectedPoints = this.performSinglePlayerCalculation(player, ps => ps.projectedPoints);
+            player.recentAveragePoints = this.performSinglePlayerCalculation(player, ps => ps.recentAveragePoints);
+            player.seasonAveragePoints = this.performSinglePlayerCalculation(player, ps => ps.seasonAveragePoints);
+            const points = player.projectedPoints || 0;
+            const salary = player.salary;
+            player.projectedPointsPerDollar = salary ? (points / salary) * pointsPerDollarMultiplier : undefined;
+            tempPlayers.push(player);
+        }
+    }
+
+    private performSinglePlayerCalculation(player: IServerPlayer, func: (playerStat: IPlayerStats) => number): number {
+        let total = 0;
+        let count = 0;
+        const stats = player.stats;
+        if (Array.isArray(stats)) {
+            for (let i = 0; i < stats.length; i++) {
+                const stat = stats[i];
+                const value = func(stat);
+                // Skip undefined, null, etc., but allow 0 (a valid number for the calculation, but not a truthy value)
+                if (typeof value === "number") {
+                    total += value;
+                    count++;
+                }
+            }
+        }
+        return count > 0 ? total / count : undefined;
     }
 }

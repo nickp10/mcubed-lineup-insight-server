@@ -1,4 +1,4 @@
-import { Sport } from "mcubed-lineup-insight-data/build/interfaces";
+import { IPlayer, Sport } from "mcubed-lineup-insight-data/build/interfaces";
 
 export interface IAlternateName {
     id?: string;
@@ -20,4 +20,15 @@ export interface IAlternateNameProvider {
     alternateNameUsed(name: string): Promise<void>;
     getAlternateName(name: string): Promise<string>;
     reload(): Promise<void>;
+}
+
+export interface IServerPlayer extends IPlayer {
+    isPlaying?: boolean;
+    likability?: number;
+    projectedPointsPerDollar?: number;
+    projectedCeiling?: number;
+    projectedFloor?: number;
+    projectedPoints?: number;
+    recentAveragePoints?: number;
+    seasonAveragePoints?: number;
 }
