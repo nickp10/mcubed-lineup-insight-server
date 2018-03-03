@@ -30,8 +30,8 @@ This node module is only usable from the command line using `mcubed-lineup-insig
 ----
 The mcubed-persistence module is used to store alternate and missing names when merging the fantasy sports data. Different third-parties refer to the same player with slight variations in the name. Alternate names are used to map these variations to the players defined in the contests. Missing names are used to store those names that cannot match a player defined in the contests. To enable these two features, all 4 persistence options must be specified on the CLI. Refer to the mcubed-persistence documentation on how to obtain the application name and key. The table names used by this module are:
 
-* lineupalternatenames - Stores the mapping between a third-party player name and the corresponding contest name.
-* lineupmissingnames - Stores the names that cannot be mapped to a corresponding contest name.
+* *lineupalternatenames* - Stores the mapping between a third-party player name and the corresponding contest name.
+* *lineupmissingnames* - Stores the names that cannot be mapped to a corresponding contest name.
 
 Accessing the Data
 ----
