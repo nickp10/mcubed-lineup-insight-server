@@ -66,9 +66,6 @@ export default class LineupAggregator {
 
     private async mergePlayerInsight(contest: IContest): Promise<void> {
         const playerMap = new PlayerMap(contest);
-        if (this.alternateNameProvider) {
-            await this.alternateNameProvider.reload();
-        }
         const playerInsight = await this.playerInsightCache.getPlayerInsight(contest.contestType, contest.sport);
         for (let i = 0; i < playerInsight.length; i++) {
             const player = playerInsight[i];
@@ -101,7 +98,7 @@ export default class LineupAggregator {
                 const missingPlayer = missingPlayers[i];
                 if (missingPlayer.team && missingPlayer.name) {
                     if (teamCodes.indexOf(missingPlayer.team) > -1) {
-                        await alternateNameProvider.addMissingName(contest.sport, missingPlayer.name, missingPlayer.team);
+                        await alternateNameProvider.addMissingName(missingPlayer.name, missingPlayer.team, contest.sport);
                     }
                 } else {
                     log.error(`Failed to save missing player: name=${missingPlayer.name}, team=${missingPlayer.team}, sport=${contest.sport}`);
@@ -112,10 +109,16 @@ export default class LineupAggregator {
     }
 
     async cacheUpdated(): Promise<void> {
+        if (this.alternateNameProvider) {
+            await this.alternateNameProvider.reload();
+        }
         const contests = await this.contestCache.getContests();
         for (let i = 0; i < contests.length; i++) {
             const contest = contests[i];
             await this.mergePlayerInsight(contest);
+        }
+        if (this.alternateNameProvider) {
+            await this.alternateNameProvider.saveUpdates();
         }
     }
 

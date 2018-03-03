@@ -50,9 +50,9 @@ export default class PlayerMap {
         if (!player && alternateNameProvider) {
             const alternateName = await alternateNameProvider.getAlternateName(name);
             if (alternateName) {
-                const alternatePlayer = this.players.get(`${team}-${alternateName}`.toLowerCase());
+                const alternatePlayer = this.players.get(`${team}-${alternateName.contestName}`.toLowerCase());
                 if (alternatePlayer) {
-                    await alternateNameProvider.alternateNameUsed(name);
+                    await alternateNameProvider.alternateNameUsed(alternateName);
                     return alternatePlayer;
                 }
             }

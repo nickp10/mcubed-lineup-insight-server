@@ -16,10 +16,12 @@ export interface IMissingName {
 }
 
 export interface IAlternateNameProvider {
-    addMissingName(sport: Sport, name: string, team: string): Promise<void>;
-    alternateNameUsed(name: string): Promise<void>;
-    getAlternateName(name: string): Promise<string>;
+    addMissingName(name: string, team: string, sport: Sport): Promise<void>;
+    alternateNameUsed(name: IAlternateName): Promise<void>;
+    getAlternateName(name: string): IAlternateName;
+    getMissingName(name: string): IMissingName;
     reload(): Promise<void>;
+    saveUpdates(): Promise<void>;
 }
 
 export interface IServerPlayer extends IPlayer {
