@@ -1,5 +1,6 @@
 import { IAlternateNameProvider, IServerPlayer } from "../interfaces";
 import { IContest, IPlayer, ITeam, IPlayerStats } from "mcubed-lineup-insight-data/build/interfaces";
+import LikeabilityRange from "./likeabilityRange";
 
 export default class PlayerMap {
     private players: Map<string, IServerPlayer>;
@@ -109,10 +110,16 @@ export default class PlayerMap {
     }
 
     performPlayerCalculations(pointsPerDollarMultiplier: number): void {
-        const tempPlayers: IServerPlayer[] = [];
+        const likeabilityRanges = [
+            new LikeabilityRange(p => p.projectedPoints, 40),
+            new LikeabilityRange(p => p.projectedPointsPerDollar, 40),
+            new LikeabilityRange(p => p.recentAveragePoints, 15),
+            new LikeabilityRange(p => p.seasonAveragePoints, 5)
+        ];
+
+        // Aggregate stats from the player stats array onto the player itself
         for (const [name, player] of this.players.entries()) {
             player.isPlaying = player.isStarter || player.isProbablePitcher;
-            player.likability = 0;
             player.projectedCeiling = this.performSinglePlayerCalculation(player, ps => ps.projectedCeiling);
             player.projectedFloor = this.performSinglePlayerCalculation(player, ps => ps.projectedFloor);
             player.projectedPoints = this.performSinglePlayerCalculation(player, ps => ps.projectedPoints);
@@ -121,7 +128,17 @@ export default class PlayerMap {
             const points = player.projectedPoints || 0;
             const salary = player.salary;
             player.projectedPointsPerDollar = salary ? (points / salary) * pointsPerDollarMultiplier : undefined;
-            tempPlayers.push(player);
+            for (const likeabilityRange of likeabilityRanges) {
+                likeabilityRange.addPossibleValue(player);
+            }
+        }
+
+        // Now that we know the full likeability ranges, get each player's percentile
+        for (const [name, player] of this.players.entries()) {
+            player.likeability = 0;
+            for (const likeabilityRange of likeabilityRanges) {
+                player.likeability += likeabilityRange.getScaledPercentile(player);
+            }
         }
     }
 
