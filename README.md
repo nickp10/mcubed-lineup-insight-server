@@ -54,7 +54,7 @@ API / ServerPlayer
 The data returned via the HTTP server follows the same API as defined by [mcubed-lineup-insight-data](https://github.com/nickp10/mcubed-lineup-insight-data#InsightData). The only difference is that this module adds more properties to the [Player](https://github.com/nickp10/mcubed-lineup-insight-data#Player) class.
 
 #### <a name="ServerPlayer"></a>ServerPlayer
-Instances of this class are extensions of the [Player](https://github.com/nickp10/mcubed-lineup-insight-data#Player class.
+Instances of this class are extensions of the [Player](https://github.com/nickp10/mcubed-lineup-insight-data#Player) class.
 
 * `isPlaying?: boolean` - Optionally specifies a single boolean that combines if a player is starting or is the probable pitcher (i.e., `isPlaying === isStarter || isProbablePitcher`).
 * `likeability?: number` - Optionally specifies a single number between 0 and 100 determining how much the lineup insight server likes the player (0 indicates hate and 100 indicates love).
