@@ -1,6 +1,6 @@
 {
   "name": "mcubed-lineup-insight-server",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Caches and serves fantasy sports data",
   "bin": "build/index.js",
   "main": "build/index.js",
@@ -29,6 +29,7 @@
   },
   "dependencies": {
     "argv": "0.0.2",
+    "babel-polyfill": "^6.26.0",
     "express": "^4.16.2",
     "mcubed-lineup-insight-data": "^3.1.0",
     "moment": "^2.20.1"
@@ -38,7 +39,6 @@
     "@types/express": "^4.11.1",
     "@types/node": "^9.4.6",
     "babel-core": "^6.26.0",
-    "babel-polyfill": "^6.26.0",
     "babel-preset-env": "^1.6.1",
     "gulp": "^3.9.1",
     "gulp-babel": "^7.0.1",
