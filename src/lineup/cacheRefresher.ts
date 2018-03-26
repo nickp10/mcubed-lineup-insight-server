@@ -134,16 +134,20 @@ export default class CacheRefresher {
     private millisInMinute: number = 60000;
     getNextPlayerInsightUpdateTime(now: Date, contestStartTime: Date): Date {
         const millisUntilContestStarts = contestStartTime.getTime() - now.getTime();
-        if (millisUntilContestStarts > (15 * this.millisInHour)) {
-            // More than 15 hours until contest starts
-            // Set next update for 14 hours before contest start
+        if (millisUntilContestStarts > (14 * this.millisInHour)) {
+            // More than 14 hours until contest starts
+            // Set next update in 14 hour intervals before contest start
             const hoursUntilContestStarts = Math.floor(millisUntilContestStarts / this.millisInHour);
             const hoursMultiplier = Math.floor(hoursUntilContestStarts / 14);
             const startTimeMoment = moment(contestStartTime);
             startTimeMoment.subtract(14 * hoursMultiplier, "hours");
-            startTimeMoment.minute(0);
-            startTimeMoment.second(0);
-            startTimeMoment.millisecond(0);
+            if (startTimeMoment.minute() !== 0 || startTimeMoment.second() !== 0 || startTimeMoment.millisecond() !== 0) {
+                // Add an hour back so we can zero out the extra time (minutes/seconds/milliseconds)
+                startTimeMoment.add(1, "hours");
+                startTimeMoment.minute(0);
+                startTimeMoment.second(0);
+                startTimeMoment.millisecond(0);
+            }
             return startTimeMoment.toDate();
         } else if (millisUntilContestStarts > (90 * this.millisInMinute)) {
             // More than 1.5 hours until contest starts
