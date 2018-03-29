@@ -137,7 +137,8 @@ export default class PlayerMap {
         for (const [name, player] of this.players.entries()) {
             player.likeability = 0;
             for (const likeabilityRange of likeabilityRanges) {
-                player.likeability += likeabilityRange.getScaledPercentile(player);
+                const scaledPercentile = likeabilityRange.getScaledPercentile(player);
+                player.likeability += typeof scaledPercentile === "number" ? scaledPercentile : likeabilityRange.scale;
             }
         }
     }
