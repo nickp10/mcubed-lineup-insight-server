@@ -1,6 +1,6 @@
 {
   "name": "mcubed-lineup-insight-server",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Caches and serves fantasy sports data",
   "bin": "build/index.js",
   "main": "build/index.js",
