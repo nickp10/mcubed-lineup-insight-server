@@ -14,7 +14,7 @@ export default class AlternateNameProvider implements IAlternateNameProvider {
     constructor() {
         this.alternateNames = new Map<string, IAlternateName>();
         this.missingNames = new Map<string, IMissingName>();
-        this.persistence = new Persistence(args.persistenceServer, args.persistencePort, args.persistenceAppName, args.persistenceAppKey);
+        this.persistence = new Persistence(args.mongoConnectionUrl, args.mongoDBName);
     }
 
     async addMissingName(name: string, team: string, sport: Sport): Promise<void> {

@@ -3,28 +3,22 @@ import utils from "./utils";
 
 export class Args {
     port: number;
-    persistenceServer: string;
-    persistencePort: number;
-    persistenceAppName: string;
-    persistenceAppKey: string;
+    mongoConnectionUrl: string;
+    mongoDBName: string;
 
     constructor() {
         const args = argv
             .option({ name: "port", short: "p", type: "number" })
-            .option({ name: "persistenceServer", type: "string" })
-            .option({ name: "persistencePort", type: "number" })
-            .option({ name: "persistenceAppName", type: "string" })
-            .option({ name: "persistenceAppKey", type: "string" })
+            .option({ name: "mongoConnectionUrl", type: "string" })
+            .option({ name: "mongoDBName", type: "string" })
             .run();
         const argPort = utils.coerceInt(args.options["port"]);
-        const argPersistenceServer = args.options["persistenceServer"];
-        const argPersistencePort = utils.coerceInt(args.options["persistencePort"]);
-        const argPersistenceAppName = args.options["persistenceAppName"];
-        const argPersistenceAppKey = args.options["persistenceAppKey"];
-        this.validate(argPort, argPersistenceServer, argPersistencePort, argPersistenceAppName, argPersistenceAppKey);
+        const argMongoConnectionUrl = args.options["mongoConnectionUrl"];
+        const argMongoDBName = args.options["mongoDBName"];
+        this.validate(argPort, argMongoConnectionUrl, argMongoDBName);
     }
 
-    validate(argPort: number, argPersistenceServer: string, argPersistencePort: number, argPersistenceAppName: string, argPersistenceAppKey: string): void {
+    validate(argPort: number, argMongoConnectionUrl: string, argMongoDBName: string): void {
         // Validate port
         this.port = argPort || 8000;
         if (!this.port) {
@@ -32,13 +26,10 @@ export class Args {
             process.exit();
         }
 
-        // Validate persistence options
-        this.persistenceServer = argPersistenceServer;
-        this.persistencePort = argPersistencePort;
-        this.persistenceAppName = argPersistenceAppName;
-        this.persistenceAppKey = argPersistenceAppKey;
+        // Validate MongoDB options
+        this.mongoConnectionUrl = argMongoConnectionUrl;
+        this.mongoDBName = argMongoDBName;
     }
 }
 
-const args: Args = new Args();
-export default args;
+export default new Args();

@@ -1,14 +1,15 @@
 import { IPlayer, Sport } from "mcubed-lineup-insight-data/build/interfaces";
+import { ObjectID } from "bson";
 
 export interface IAlternateName {
-    id?: string;
+    _id?: ObjectID;
     contestName?: string;
     externalName?: string;
     lastUsedDate?: Date;
 }
 
 export interface IMissingName {
-    id?: string;
+    _id?: ObjectID;
     count?: number;
     name?: string;
     sport?: Sport;
