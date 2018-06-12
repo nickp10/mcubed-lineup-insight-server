@@ -2,16 +2,46 @@ import { IAlternateName, IMissingName } from "./interfaces";
 import { MongoClient, Db, ObjectID } from "mongodb";
 import log from "./log";
 
+export interface ICollectionPersistence<T extends { _id?: ObjectID }> {
+    deleteAll(): Promise<void>;
+    deleteSingle(id: ObjectID): Promise<void>;
+    getAll(): Promise<T[]>;
+    getAllFiltered(filter: T): Promise<T[]>;
+    getSingle(id: ObjectID): Promise<T>;
+    getSingleFiltered(filter: T): Promise<T>;
+    insertSingle(document: T): Promise<T>;
+    insertMany(documents: IterableIterator<T>): Promise<T[]>;
+    updateSingle(document: T): Promise<void>;
+}
+
 export default class Persistence {
-    isValid: boolean;
-    client: MongoClient;
-    db: Db;
+    private isValid: boolean;
+    private client: MongoClient;
+    private db: Db;
+    lineupalternatenames: ICollectionPersistence<IAlternateName>;
+    lineupmissingnames: ICollectionPersistence<IMissingName>;
 
     constructor(private mongoConnectionUrl: string, private mongoDBName: string) {
         this.isValid = !(!this.mongoConnectionUrl || !this.mongoDBName);
+        this.lineupalternatenames = this.createCollectionPersistence<IAlternateName>("lineupalternatenames");
+        this.lineupmissingnames = this.createCollectionPersistence<IMissingName>("lineupmissingnames");
     }
 
-    async connectDB(): Promise<Db> {
+    private createCollectionPersistence<T extends { _id?: ObjectID }>(table: string): ICollectionPersistence<T> {
+        return {
+            deleteAll: () => this.deleteAll(table),
+            deleteSingle: (id: ObjectID) => this.deleteSingle(table, id),
+            getAll: () => this.getAll(table),
+            getAllFiltered: (filter: T) => this.getAllFiltered(table, filter),
+            getSingle: (id: ObjectID) => this.getSingle(table, id),
+            getSingleFiltered: (filter: T) => this.getSingleFiltered(table, filter),
+            insertSingle: (document: T) => this.insertSingle(table, document),
+            insertMany: (documents: IterableIterator<T>) => this.insertMany(table, documents),
+            updateSingle: (document: T) => this.updateSingle(table, document)
+        };
+    }
+
+    private async connectDB(): Promise<Db> {
         if (!this.client) {
             this.client = await MongoClient.connect(this.mongoConnectionUrl);
         }
@@ -21,7 +51,7 @@ export default class Persistence {
         return this.db;
     }
 
-    disconnectDB(): void {
+    private disconnectDB(): void {
         if (this.db) {
             this.db = undefined;
         }
@@ -31,34 +61,14 @@ export default class Persistence {
         }
     }
 
-    async getMissingNames(): Promise<IMissingName[]> {
-        return await this.getAll<IMissingName>("lineupmissingnames");
-    }
-
-    async deleteMissingNames(): Promise<void> {
-        return await this.deleteAll("lineupmissingnames");
-    }
-
-	async postMissingNames(missingNames: IterableIterator<IMissingName>): Promise<IMissingName[]> {
-        return await this.postMany("lineupmissingnames", missingNames);
-	}
-
-    async getAlternateNames(): Promise<IAlternateName[]> {
-        return await this.getAll<IAlternateName>("lineupalternatenames");
-    }
-
-    async deleteAlternateNames(): Promise<void> {
-        return await this.deleteAll("lineupalternatenames");
-    }
-
-	async postAlternateNames(alternateNames: IterableIterator<IAlternateName>): Promise<IAlternateName[]> {
-        return await this.postMany("lineupalternatenames", alternateNames);
-	}
-
-    async deleteAll(table: string): Promise<void> {
+    private checkValid(): void {
         if (!this.isValid) {
-            return undefined;
+            throw new Error("The specified database is not valid. Ensure the correct configurations have been specified.");
         }
+    }
+
+    private async deleteAll(table: string): Promise<void> {
+        this.checkValid();
         try {
             const db = await this.connectDB();
             const collections = await db.collections();
@@ -71,10 +81,8 @@ export default class Persistence {
         }
     }
 
-    async deleteSingle(table: string, id: ObjectID): Promise<void> {
-        if (!this.isValid || !id) {
-            return undefined;
-        }
+    private async deleteSingle(table: string, id: ObjectID): Promise<void> {
+        this.checkValid();
         try {
             const db = await this.connectDB();
             await db.collection(table).deleteOne({ _id: id });
@@ -84,10 +92,8 @@ export default class Persistence {
         }
     }
 
-    async getAll<T>(table: string): Promise<T[]> {
-        if (!this.isValid) {
-            return undefined;
-        }
+    private async getAll<T>(table: string): Promise<T[]> {
+        this.checkValid();
         try {
             const db = await this.connectDB();
             const cursor = await db.collection(table).find<T>();
@@ -98,10 +104,8 @@ export default class Persistence {
         }
     }
 
-    async getAllFiltered<T>(table: string, filter: T): Promise<T[]> {
-        if (!this.isValid) {
-            return undefined;
-        }
+    private async getAllFiltered<T>(table: string, filter: T): Promise<T[]> {
+        this.checkValid();
         try {
             const db = await this.connectDB();
             const cursor = await db.collection(table).find<T>(filter);
@@ -112,10 +116,8 @@ export default class Persistence {
         }
     }
 
-    async getSingle<T>(table: string, id: ObjectID): Promise<T> {
-        if (!this.isValid || !id) {
-            return undefined;
-        }
+    private async getSingle<T>(table: string, id: ObjectID): Promise<T> {
+        this.checkValid();
         try {
             const db = await this.connectDB();
             return await db.collection(table).findOne<T>({ _id: id });
@@ -125,7 +127,8 @@ export default class Persistence {
         }
     }
 
-    async getSingleFiltered<T>(table: string, filter: T): Promise<T> {
+    private async getSingleFiltered<T>(table: string, filter: T): Promise<T> {
+        this.checkValid();
         try {
             const db = await this.connectDB();
             return await db.collection(table).findOne<T>(filter);
@@ -134,13 +137,11 @@ export default class Persistence {
         }
     }
 
-    async postSingle<T extends { _id?: ObjectID }>(table: string, item: T): Promise<T> {
-        if (!this.isValid || !item || item._id) {
-            return item;
-        }
-        delete item._id;
+    private async insertSingle<T extends { _id?: ObjectID }>(table: string, item: T): Promise<T> {
+        this.checkValid();
         try {
             const db = await this.connectDB();
+            delete item._id;
             const result = await db.collection(table).insertOne(item);
             item._id = result.insertedId;
             return item;
@@ -150,17 +151,15 @@ export default class Persistence {
         }
     }
 
-    async postMany<T extends { _id?: ObjectID }>(table: string, items: IterableIterator<T>): Promise<T[]> {
-        if (!this.isValid || !items) {
-            return undefined;
-        }
+    private async insertMany<T extends { _id?: ObjectID }>(table: string, items: IterableIterator<T>): Promise<T[]> {
+        this.checkValid();
         try {
+            const db = await this.connectDB();
             const newItems: T[] = [];
             for (const item of items) {
                 delete item._id;
                 newItems.push(item);
             }
-            const db = await this.connectDB();
             const result = await db.collection(table).insertMany(newItems);
             for (let i = 0; i < newItems.length; i++) {
                 const newItem = newItems[i];
@@ -173,10 +172,8 @@ export default class Persistence {
         }
     }
 
-    async putSingle<T extends { _id?: ObjectID }>(table: string, item: T): Promise<void> {
-        if (!this.isValid || !item || !item._id) {
-            return undefined;
-        }
+    private async updateSingle<T extends { _id?: ObjectID }>(table: string, item: T): Promise<void> {
+        this.checkValid();
         try {
             const db = await this.connectDB();
             await db.collection(table).findOneAndUpdate({ _id: item._id }, { $set: item });

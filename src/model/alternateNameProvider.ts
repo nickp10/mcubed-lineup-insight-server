@@ -62,7 +62,7 @@ export default class AlternateNameProvider implements IAlternateNameProvider {
     async reload(): Promise<void> {
         log.info("Reloading the cache of alternate and missing names");
         this.alternateNames.clear();
-        const alternateNames = await this.persistence.getAlternateNames();
+        const alternateNames = await this.persistence.lineupalternatenames.getAll();
         if (Array.isArray(alternateNames)) {
             for (let i = 0; i < alternateNames.length; i++) {
                 const alternateName = alternateNames[i];
@@ -72,7 +72,7 @@ export default class AlternateNameProvider implements IAlternateNameProvider {
             }
         }
         this.missingNames.clear();
-        const missingNames = await this.persistence.getMissingNames();
+        const missingNames = await this.persistence.lineupmissingnames.getAll();
         if (Array.isArray(missingNames)) {
             for (let i = 0; i < missingNames.length; i++) {
                 const missingName = missingNames[i];
@@ -93,8 +93,8 @@ export default class AlternateNameProvider implements IAlternateNameProvider {
         if (this.hasAlternateNameUpdates) {
             log.info("Saving updates to the alternate names");
             try {
-                await this.persistence.deleteAlternateNames();
-                await this.persistence.postAlternateNames(this.alternateNames.values());
+                await this.persistence.lineupalternatenames.deleteAll();
+                await this.persistence.lineupalternatenames.insertMany(this.alternateNames.values());
                 log.info("Saved updates to the alternate names");
             } catch (error) {
                 log.error(error);
@@ -107,8 +107,8 @@ export default class AlternateNameProvider implements IAlternateNameProvider {
         if (this.hasMissingNameUpdates) {
             log.info("Saving updates to the missing names");
             try {
-                await this.persistence.deleteMissingNames();
-                await this.persistence.postMissingNames(this.missingNames.values());
+                await this.persistence.lineupmissingnames.deleteAll();
+                await this.persistence.lineupmissingnames.insertMany(this.missingNames.values());
                 log.info("Saved updates to the missing names");
             } catch (error) {
                 log.error(error);
