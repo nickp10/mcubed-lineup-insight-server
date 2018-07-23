@@ -43,7 +43,7 @@ export default class Persistence {
 
     private async connectDB(): Promise<Db> {
         if (!this.client) {
-            this.client = await MongoClient.connect(this.mongoConnectionUrl);
+            this.client = await MongoClient.connect(this.mongoConnectionUrl, { useNewUrlParser: true });
         }
         if (!this.db) {
             this.db = this.client.db(this.mongoDBName);
@@ -76,7 +76,7 @@ export default class Persistence {
                 await db.dropCollection(table);
             }
         } catch (error) {
-            log.error(error);
+            log.exception(error);
             throw new Error("Cannot delete all the records. Ensure the database is running and the correct database parameters have been specified.");
         }
     }
@@ -87,7 +87,7 @@ export default class Persistence {
             const db = await this.connectDB();
             await db.collection(table).deleteOne({ _id: id });
         } catch (error) {
-            log.error(error);
+            log.exception(error);
             throw new Error("Cannot delete the specified record. Ensure the database is running and the correct database parameters have been specified.");
         }
     }
@@ -99,7 +99,7 @@ export default class Persistence {
             const cursor = await db.collection(table).find<T>();
             return await cursor.toArray();
         } catch (error) {
-            log.error(error);
+            log.exception(error);
             throw new Error("Cannot read all the records. Ensure the database is running and the correct database parameters have been specified.");
         }
     }
@@ -111,7 +111,7 @@ export default class Persistence {
             const cursor = await db.collection(table).find<T>(filter);
             return await cursor.toArray();
         } catch (error) {
-            log.error(error);
+            log.exception(error);
             throw new Error("Cannot read the filtered records. Ensure the database is running and the correct database parameters have been specified.");
         }
     }
@@ -122,7 +122,7 @@ export default class Persistence {
             const db = await this.connectDB();
             return await db.collection(table).findOne<T>({ _id: id });
         } catch (error) {
-            log.error(error);
+            log.exception(error);
             throw new Error("Cannot read the record with the specified ID. Ensure the database is running and the correct database parameters have been specified.");
         }
     }
@@ -146,7 +146,7 @@ export default class Persistence {
             item._id = result.insertedId;
             return item;
         } catch (error) {
-            log.error(error);
+            log.exception(error);
             throw new Error("Cannot create the specified record. Ensure the database is running and the correct database parameters have been specified.");
         }
     }
@@ -167,7 +167,7 @@ export default class Persistence {
             }
             return newItems;
         } catch (error) {
-            log.error(error);
+            log.exception(error);
             throw new Error("Cannot create the specified records. Ensure the database is running and the correct database parameters have been specified.");
         }
     }
@@ -178,7 +178,7 @@ export default class Persistence {
             const db = await this.connectDB();
             await db.collection(table).findOneAndUpdate({ _id: item._id }, { $set: item });
         } catch (error) {
-            log.error(error);
+            log.exception(error);
             throw new Error("Cannot update the specified record. Ensure the database is running and the correct database parameters have been specified.");
         }
     }

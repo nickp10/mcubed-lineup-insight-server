@@ -97,7 +97,7 @@ export default class AlternateNameProvider implements IAlternateNameProvider {
                 await this.persistence.lineupalternatenames.insertMany(this.alternateNames.values());
                 log.info("Saved updates to the alternate names");
             } catch (error) {
-                log.error(error);
+                log.exception(error);
             }
         }
         this.hasAlternateNameUpdates = false;
@@ -111,7 +111,7 @@ export default class AlternateNameProvider implements IAlternateNameProvider {
                 await this.persistence.lineupmissingnames.insertMany(this.missingNames.values());
                 log.info("Saved updates to the missing names");
             } catch (error) {
-                log.error(error);
+                log.exception(error);
             }
         }
         this.hasMissingNameUpdates = false;

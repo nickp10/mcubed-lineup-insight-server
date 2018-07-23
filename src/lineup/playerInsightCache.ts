@@ -49,10 +49,11 @@ export default class PlayerInsightCache {
         try {
             const playerInsight = await insightData.getPlayerInsight(contestType, sport);
             log.info(`Finished retrieving player insight for contestType=${ContestType[contestType]} and sport=${Sport[sport]}`);
-            return playerInsight;
+            return playerInsight || [];
         } catch (error) {
             log.error(`Could not retrieve player insight for contestType=${ContestType[contestType]} and sport=${Sport[sport]}`);
-            log.error(error);
+            log.exception(error);
+            return [];
         }
     }
 

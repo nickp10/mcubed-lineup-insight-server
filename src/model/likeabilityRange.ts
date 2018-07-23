@@ -9,6 +9,9 @@ export default class LikeabilityRange {
 
     addPossibleValue(player: IServerPlayer): void {
         const value = this.valueFunc(player);
+        if (typeof value !== "number") {
+            return;
+        }
         if (value < this.min || typeof this.min !== "number") {
             this.min = value;
         }
@@ -20,6 +23,8 @@ export default class LikeabilityRange {
     getPercentile(player: IServerPlayer): number {
         const value = this.valueFunc(player);
         if (typeof this.min !== "number" || typeof this.max !== "number") {
+            return this.scale;
+        } else if (typeof value !== "number") {
             return undefined;
         } else if (this.min === this.max) {
             if (value === this.min) {

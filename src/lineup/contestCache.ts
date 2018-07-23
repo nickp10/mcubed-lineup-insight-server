@@ -25,10 +25,11 @@ export default class ContestCache {
         try {
             const contests = await insightData.getContestList();
             log.info(`Finished retrieving contest list`);
-            return contests;
+            return contests || [];
         } catch (error) {
             log.error(`Could not retrieve contest list`);
-            log.error(error);
+            log.exception(error);
+            return [];
         }
     }
 }

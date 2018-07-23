@@ -62,7 +62,7 @@ export default class PlayerMap {
 
     async mergePlayer(player: IPlayer, alternateNameProvider: IAlternateNameProvider): Promise<void> {
         const targetPlayer = await this.getPlayer(player.team, player.name, alternateNameProvider);
-        if (targetPlayer != null) {
+        if (targetPlayer) {
             const sourceStats = player.stats || (player.stats = []);
             const targetStats = targetPlayer.stats || (targetPlayer.stats = []);
             for (let i = 0; i < sourceStats.length; i++) {
@@ -138,7 +138,7 @@ export default class PlayerMap {
             player.likeability = 0;
             for (const likeabilityRange of likeabilityRanges) {
                 const scaledPercentile = likeabilityRange.getScaledPercentile(player);
-                player.likeability += typeof scaledPercentile === "number" ? scaledPercentile : likeabilityRange.scale;
+                player.likeability += typeof scaledPercentile === "number" ? scaledPercentile : 0;
             }
         }
     }

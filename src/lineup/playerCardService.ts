@@ -12,7 +12,11 @@ export default class PlayerCardService {
             return playerCard;
         } catch (error) {
             log.error(`Could not retrieve player card for contestID=${contest.ID} and playerID=${playerID}`);
-            log.error(error);
+            log.exception(error);
+            return {
+                gameLog: [],
+                news: []
+            };
         }
     }
 }

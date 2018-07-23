@@ -10,6 +10,10 @@ export class Log {
         console.error(this.formatMessage(message));
     }
 
+    exception(error: Error): void {
+        console.error(this.formatMessage(error.stack));
+    }
+
     info(message: string): void {
         console.log(this.formatMessage(message));
     }
