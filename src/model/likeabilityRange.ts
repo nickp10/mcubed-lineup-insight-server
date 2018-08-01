@@ -20,10 +20,10 @@ export default class LikeabilityRange {
         }
     }
 
-    getPercentile(player: IServerPlayer): number {
+    private getPercentile(player: IServerPlayer): number {
         const value = this.valueFunc(player);
         if (typeof this.min !== "number" || typeof this.max !== "number") {
-            return this.scale;
+            return 1;
         } else if (typeof value !== "number") {
             return undefined;
         } else if (this.min === this.max) {
