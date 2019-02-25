@@ -60,6 +60,10 @@ export default class AlternateNameProvider implements IAlternateNameProvider {
     }
 
     async reload(): Promise<void> {
+        if (!this.persistence.isValid) {
+            log.info("Skipped loading the cache of alternate and missing names since the database options were omitted on startup");
+            return;
+        }
         log.info("Reloading the cache of alternate and missing names");
         this.alternateNames.clear();
         const alternateNames = await this.persistence.lineupalternatenames.getAll();
@@ -85,6 +89,10 @@ export default class AlternateNameProvider implements IAlternateNameProvider {
     }
 
     async saveUpdates(): Promise<void> {
+        if (!this.persistence.isValid) {
+            log.info("Skipped saving updates to the alternate and missing names since the database options were omitted on startup");
+            return;
+        }
         await this.saveAlternateNamesUpdates();
         await this.saveMissingNamesUpdates();
     }

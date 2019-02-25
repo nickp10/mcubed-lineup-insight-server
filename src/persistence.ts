@@ -15,9 +15,9 @@ export interface ICollectionPersistence<T extends { _id?: ObjectID }> {
 }
 
 export default class Persistence {
-    private isValid: boolean;
     private client: MongoClient;
     private db: Db;
+    isValid: boolean;
     lineupalternatenames: ICollectionPersistence<IAlternateName>;
     lineupmissingnames: ICollectionPersistence<IMissingName>;
 
