@@ -1,5 +1,4 @@
-import { IContest } from "mcubed-lineup-insight-data/build/interfaces";
-import insightData from "mcubed-lineup-insight-data";
+import insightData, { IContest } from "mcubed-lineup-insight-data";
 import log from "../log";
 
 export default class ContestCache {

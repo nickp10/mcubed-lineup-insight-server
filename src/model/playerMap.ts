@@ -1,5 +1,5 @@
 import { IAlternateNameProvider, IServerPlayer } from "../interfaces";
-import { IContest, IPlayer, ITeam, IPlayerStats } from "mcubed-lineup-insight-data/build/interfaces";
+import { IContest, IPlayer, ITeam, IPlayerStats } from "mcubed-lineup-insight-data";
 import LikeabilityRange from "./likeabilityRange";
 
 export default class PlayerMap {

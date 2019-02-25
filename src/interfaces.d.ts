@@ -1,4 +1,4 @@
-import { IPlayer, Sport } from "mcubed-lineup-insight-data/build/interfaces";
+import { IPlayer, Sport } from "mcubed-lineup-insight-data";
 import { ObjectID } from "bson";
 
 export interface IAlternateName {

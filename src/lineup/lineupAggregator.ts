@@ -1,5 +1,5 @@
 import { IAlternateNameProvider } from "../interfaces";
-import { IContest, IPlayerCard, ContestType, Sport } from "mcubed-lineup-insight-data/build/interfaces";
+import { IContest, IPlayerCard, ContestType, Sport } from "mcubed-lineup-insight-data";
 import CacheRefresher from "./cacheRefresher";
 import ContestCache from "./contestCache";
 import log from "../log";

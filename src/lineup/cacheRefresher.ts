@@ -1,4 +1,4 @@
-import { ContestType, Sport, IContest } from "mcubed-lineup-insight-data/build/interfaces";
+import { ContestType, Sport, IContest } from "mcubed-lineup-insight-data";
 import ContestCache from "./contestCache";
 import LineupAggregator from "./lineupAggregator";
 import log from "../log";

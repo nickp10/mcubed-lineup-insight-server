@@ -1,5 +1,5 @@
 import { IAlternateName, IAlternateNameProvider, IMissingName } from "../interfaces";
-import { Sport } from "mcubed-lineup-insight-data/build/interfaces";
+import { Sport } from "mcubed-lineup-insight-data";
 import args from "../args";
 import log from "../log";
 import Persistence from "../persistence";
