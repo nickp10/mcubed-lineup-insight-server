@@ -1,6 +1,3 @@
-#! /usr/bin/env node
-import "babel-polyfill";
-
 import AlternateNameProvider from "./model/alternateNameProvider";
 import args from "./args";
 import * as express from "express";
