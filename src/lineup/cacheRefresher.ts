@@ -4,6 +4,7 @@ import LineupAggregator from "./lineupAggregator";
 import log from "../log";
 import * as moment from "moment";
 import PlayerInsightCache from "./playerInsightCache";
+import TeamInsightCache from "./teamInsightCache";
 
 export default class CacheRefresher {
     contestCache: ContestCache;
@@ -11,12 +12,16 @@ export default class CacheRefresher {
     lineupAggregator: LineupAggregator;
     playerInsightCache: PlayerInsightCache;
     playerInsightCacheTimers: Map<ContestType, Map<Sport, NodeJS.Timer>>;
+    teamInsightCache: TeamInsightCache;
+    teamInsightCacheTimers: Map<ContestType, Map<Sport, NodeJS.Timer>>;
 
-    constructor(lineupAggregator: LineupAggregator, contestCache: ContestCache, playerInsightCache: PlayerInsightCache) {
+    constructor(lineupAggregator: LineupAggregator, contestCache: ContestCache, playerInsightCache: PlayerInsightCache, teamInsightCache: TeamInsightCache) {
         this.lineupAggregator = lineupAggregator;
         this.contestCache = contestCache;
         this.playerInsightCache = playerInsightCache;
         this.playerInsightCacheTimers = new Map<ContestType, Map<Sport, NodeJS.Timer>>();
+        this.teamInsightCache = teamInsightCache;
+        this.teamInsightCacheTimers = new Map<ContestType, Map<Sport, NodeJS.Timer>>();
     }
 
     cancelAllTimers(): void {
@@ -30,11 +35,18 @@ export default class CacheRefresher {
             }
         }
         this.playerInsightCacheTimers.clear();
+        for (const [contestType, contestTimers] of this.teamInsightCacheTimers.entries()) {
+            for (const [sport, timer] of contestTimers.entries()) {
+                clearTimeout(timer);
+            }
+        }
+        this.teamInsightCacheTimers.clear();
     }
 
     async refreshAllData(): Promise<void> {
         this.cancelAllTimers();
         this.playerInsightCache.clearAllPlayerInsight();
+        this.teamInsightCache.clearAllTeamInsight();
         await this.refreshContestCache();
     }
 
@@ -51,12 +63,13 @@ export default class CacheRefresher {
         // Refresh data
         const contests = await this.contestCache.refreshContests();
         this.setupPlayerInsightCacheTimers(contests);
+        this.setupTeamInsightCacheTimers(contests);
         await this.lineupAggregator.cacheUpdated();
     }
 
-    async refreshPlayerInsightCache(contestType: ContestType, sport: Sport): Promise<void> {
+    private async refreshPlayerInsightCache(contestType: ContestType, sport: Sport): Promise<void> {
         // Cancel previous timer
-        const contestTimers = this.getContestTimers(contestType);
+        const contestTimers = this.getPlayerInsightContestTimers(contestType);
         const timer = contestTimers.get(sport);
         if (timer) {
             clearTimeout(timer);
@@ -72,7 +85,7 @@ export default class CacheRefresher {
         await this.lineupAggregator.cacheUpdatedForContestTypeAndSport(contestType, sport);
     }
 
-    getContestTimers(contestType: ContestType): Map<Sport, NodeJS.Timer> {
+    private getPlayerInsightContestTimers(contestType: ContestType): Map<Sport, NodeJS.Timer> {
         const contestTimers = this.playerInsightCacheTimers.get(contestType);
         if (!contestTimers) {
             const newContestTimers = new Map<Sport, NodeJS.Timer>();
@@ -82,7 +95,35 @@ export default class CacheRefresher {
         return contestTimers;
     }
 
-    setupContestCacheTimer(): void {
+    private async refreshTeamInsightCache(contestType: ContestType, sport: Sport): Promise<void> {
+        // Cancel previous timer
+        const contestTimers = this.getTeamInsightContestTimers(contestType);
+        const timer = contestTimers.get(sport);
+        if (timer) {
+            clearTimeout(timer);
+            contestTimers.delete(sport);
+        }
+
+        // Create new timer
+        const contests = await this.contestCache.getContests();
+        this.setupTeamInsightCacheTimers(contests);
+
+        // Refresh data
+        await this.teamInsightCache.refreshTeamInsight(contestType, sport);
+        await this.lineupAggregator.cacheUpdatedForContestTypeAndSport(contestType, sport);
+    }
+
+    private getTeamInsightContestTimers(contestType: ContestType): Map<Sport, NodeJS.Timer> {
+        const contestTimers = this.playerInsightCacheTimers.get(contestType);
+        if (!contestTimers) {
+            const newContestTimers = new Map<Sport, NodeJS.Timer>();
+            this.playerInsightCacheTimers.set(contestType, newContestTimers);
+            return newContestTimers;
+        }
+        return contestTimers;
+    }
+
+    private setupContestCacheTimer(): void {
         const now = new Date();
         const nextUpdateTime = this.getNextContestUpdateTime(now);
         const nextUpdateMoment = moment(nextUpdateTime);
@@ -93,14 +134,14 @@ export default class CacheRefresher {
         this.contestCache.nextUpdateTime = nextUpdateTime;
     }
 
-    setupPlayerInsightCacheTimers(contests: IContest[]): void {
+    private setupPlayerInsightCacheTimers(contests: IContest[]): void {
         const now = new Date();
         const sortedContests = [...contests].sort(this.compareContestStartTime);
         for (let i = 0; i < sortedContests.length; i++) {
             const contest = sortedContests[i];
             const startTime = contest.startTime;
             if (startTime) {
-                const contestTimers = this.getContestTimers(contest.contestType);
+                const contestTimers = this.getPlayerInsightContestTimers(contest.contestType);
                 const timer = contestTimers.get(contest.sport);
                 if (!timer) {
                     const nextUpdateTime = this.getNextPlayerInsightUpdateTime(now, startTime);
@@ -112,6 +153,31 @@ export default class CacheRefresher {
                         }, nextUpdateTime.getTime() - now.getTime());
                         contestTimers.set(contest.sport, playerInsightTimer);
                         this.playerInsightCache.setNextUpdateTime(contest.contestType, contest.sport, nextUpdateTime);
+                    }
+                }
+            }
+        }
+    }
+
+    private setupTeamInsightCacheTimers(contests: IContest[]): void {
+        const now = new Date();
+        const sortedContests = [...contests].sort(this.compareContestStartTime);
+        for (let i = 0; i < sortedContests.length; i++) {
+            const contest = sortedContests[i];
+            const startTime = contest.startTime;
+            if (startTime) {
+                const contestTimers = this.getTeamInsightContestTimers(contest.contestType);
+                const timer = contestTimers.get(contest.sport);
+                if (!timer) {
+                    const nextUpdateTime = this.getNextTeamInsightUpdateTime(now, startTime);
+                    if (nextUpdateTime) {
+                        const nextUpdateMoment = moment(nextUpdateTime);
+                        log.info(`Team insight for contestType=${ContestType[contest.contestType]} and sport=${Sport[contest.sport]} will refresh at ${nextUpdateMoment.format("MM/DD/YYYY HH:mm:ss.SSS")}`);
+                        const teamInsightTimer = setTimeout(async () => {
+                            await this.refreshTeamInsightCache(contest.contestType, contest.sport);
+                        }, nextUpdateTime.getTime() - now.getTime());
+                        contestTimers.set(contest.sport, teamInsightTimer);
+                        this.teamInsightCache.setNextUpdateTime(contest.contestType, contest.sport, nextUpdateTime);
                     }
                 }
             }
@@ -132,7 +198,7 @@ export default class CacheRefresher {
 
     private millisInHour: number = 3600000;
     private millisInMinute: number = 60000;
-    getNextPlayerInsightUpdateTime(now: Date, contestStartTime: Date): Date {
+    private getNextPlayerInsightUpdateTime(now: Date, contestStartTime: Date): Date {
         const millisUntilContestStarts = contestStartTime.getTime() - now.getTime();
         if (millisUntilContestStarts > (14 * this.millisInHour)) {
             // More than 14 hours until contest starts
@@ -184,7 +250,19 @@ export default class CacheRefresher {
         return undefined;
     }
 
-    compareContestStartTime(contest1: IContest, contest2: IContest): number {
+    private getNextTeamInsightUpdateTime(now: Date, contestStartTime: Date): Date {
+        const nextUpdateMoment = moment(now);
+        nextUpdateMoment.add(6, "hours");
+        if (nextUpdateMoment.minute() === 59) {
+            nextUpdateMoment.add(1, "minutes");
+        }
+        nextUpdateMoment.minute(0);
+        nextUpdateMoment.second(0);
+        nextUpdateMoment.millisecond(0);
+        return nextUpdateMoment.toDate();
+    }
+
+    private compareContestStartTime(contest1: IContest, contest2: IContest): number {
         if (!contest1) {
             return contest2 ? -1 : 0;
         } else if (!contest2) {

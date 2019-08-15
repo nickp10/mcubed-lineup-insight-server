@@ -6,6 +6,7 @@ import log from "../log";
 import PlayerInsightCache from "./playerInsightCache";
 import PlayerCardService from "./playerCardService";
 import PlayerMap from "../model/playerMap";
+import TeamInsightCache from "./teamInsightCache";
 
 export default class LineupAggregator {
     private alternateNameProvider: IAlternateNameProvider;
@@ -15,6 +16,7 @@ export default class LineupAggregator {
     private playerInsightCache: PlayerInsightCache;
     private pointsPerDollarMultipliers: Map<ContestType, number>;
     private refresher: CacheRefresher;
+    private teamInsightCache: TeamInsightCache;
 
     constructor(alternateNameProvider: IAlternateNameProvider) {
         this.alternateNameProvider = alternateNameProvider;
@@ -22,11 +24,12 @@ export default class LineupAggregator {
         this.mergedPlayerInsight = [];
         this.playerCardService = new PlayerCardService();
         this.playerInsightCache = new PlayerInsightCache();
+        this.teamInsightCache = new TeamInsightCache();
         this.pointsPerDollarMultipliers = new Map<ContestType, number>();
         this.pointsPerDollarMultipliers.set(ContestType.DraftKings, 1000);
         this.pointsPerDollarMultipliers.set(ContestType.FanDuel, 1000);
         this.pointsPerDollarMultipliers.set(ContestType.Yahoo, 1);
-        this.refresher = new CacheRefresher(this, this.contestCache, this.playerInsightCache);
+        this.refresher = new CacheRefresher(this, this.contestCache, this.playerInsightCache, this.teamInsightCache);
     }
 
     async start(): Promise<void> {
@@ -64,6 +67,10 @@ export default class LineupAggregator {
         return contests;
     }
 
+    private async mergeTeamInsight(contest: IContest, playerMap: PlayerMap): Promise<void> {
+        const teamInsight = await this.teamInsightCache.getTeamInsight(contest.contestType, contest.sport);
+    }
+
     private async mergePlayerInsight(contest: IContest): Promise<void> {
         const playerMap = new PlayerMap(contest);
         const playerInsight = await this.playerInsightCache.getPlayerInsight(contest.contestType, contest.sport);
@@ -73,6 +80,7 @@ export default class LineupAggregator {
         }
         await this.saveMissingPlayers(contest, playerMap, this.alternateNameProvider);
         playerMap.performPlayerCalculations(this.pointsPerDollarMultipliers.get(contest.contestType));
+        await this.mergeTeamInsight(contest, playerMap);
         this.mergedPlayerInsight.push(contest);
         contest.playerDataLastUpdateTime = this.playerInsightCache.getLastUpdateTime(contest.contestType, contest.sport);
         contest.playerDataNextUpdateTime = this.playerInsightCache.getNextUpdateTime(contest.contestType, contest.sport);
