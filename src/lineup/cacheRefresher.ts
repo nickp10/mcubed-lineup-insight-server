@@ -114,10 +114,10 @@ export default class CacheRefresher {
     }
 
     private getTeamInsightContestTimers(contestType: ContestType): Map<Sport, NodeJS.Timer> {
-        const contestTimers = this.playerInsightCacheTimers.get(contestType);
+        const contestTimers = this.teamInsightCacheTimers.get(contestType);
         if (!contestTimers) {
             const newContestTimers = new Map<Sport, NodeJS.Timer>();
-            this.playerInsightCacheTimers.set(contestType, newContestTimers);
+            this.teamInsightCacheTimers.set(contestType, newContestTimers);
             return newContestTimers;
         }
         return contestTimers;

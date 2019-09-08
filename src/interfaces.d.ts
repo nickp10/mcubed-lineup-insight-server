@@ -28,6 +28,7 @@ export interface IAlternateNameProvider {
 export interface IServerPlayer extends IPlayer {
     isPlaying?: boolean;
     likeability?: number;
+    oppositionPercentile?: number;
     projectedPointsPerDollar?: number;
     projectedCeiling?: number;
     projectedFloor?: number;

@@ -1,8 +1,9 @@
 import { IAlternateNameProvider } from "../interfaces";
-import { IContest, IPlayerCard, ContestType, Sport } from "mcubed-lineup-insight-data";
+import { IContest, IPlayerCard, IPositionPoints, ContestType, Sport } from "mcubed-lineup-insight-data";
 import CacheRefresher from "./cacheRefresher";
 import ContestCache from "./contestCache";
 import log from "../log";
+import PercentileUtil from "../model/percentileUtil";
 import PlayerInsightCache from "./playerInsightCache";
 import PlayerCardService from "./playerCardService";
 import PlayerMap from "../model/playerMap";
@@ -69,6 +70,50 @@ export default class LineupAggregator {
 
     private async mergeTeamInsight(contest: IContest, playerMap: PlayerMap): Promise<void> {
         const teamInsight = await this.teamInsightCache.getTeamInsight(contest.contestType, contest.sport);
+        const teamPercentilesCache = new Map<string, Map<string, number>>();
+        if (teamInsight) {
+            // Calculate the minimum and maximum values for all of the positions
+            const percentilesCache = new Map<string, PercentileUtil<IPositionPoints>>();
+            for (const team of teamInsight) {
+                if (team.pointsAllowedPerPosition) {
+                    for (const pointsAllowed of team.pointsAllowedPerPosition) {
+                        if (pointsAllowed.position) {
+                            let positionUtil = percentilesCache.get(pointsAllowed.position);
+                            if (!positionUtil) {
+                                positionUtil = new PercentileUtil<IPositionPoints>(p => p.points, 100);
+                                percentilesCache.set(pointsAllowed.position, positionUtil);
+                            }
+                            positionUtil.addPossibleValue(pointsAllowed);
+                        }
+                    }
+                }
+            }
+
+            // Calculate the percentile that each of the teams fall within for each position
+            for (const team of teamInsight) {
+                if (team.pointsAllowedPerPosition) {
+                    let teamCache = teamPercentilesCache.get(team.code);
+                    if (!teamCache) {
+                        teamCache = new Map<string, number>();
+                        teamPercentilesCache.set(team.code, teamCache);
+                    }
+                    for (const pointsAllowed of team.pointsAllowedPerPosition) {
+                        if (pointsAllowed.position) {
+                            const positionUtil = percentilesCache.get(pointsAllowed.position);
+                            if (positionUtil) {
+                                const percentile = positionUtil.getScaledPercentile(pointsAllowed);
+                                if (typeof percentile === "number") {
+                                    teamCache.set(pointsAllowed.position, percentile);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Update each player's percentile
+        playerMap.mergeTeamInsight(teamPercentilesCache);
     }
 
     private async mergePlayerInsight(contest: IContest): Promise<void> {

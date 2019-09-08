@@ -1,14 +1,12 @@
-import { IServerPlayer } from "../interfaces";
-
-export default class LikeabilityRange {
+export default class PercentileUtil<T> {
     private min: number;
     private max: number;
 
-    constructor(public valueFunc: (player: IServerPlayer) => number, public scale: number) {
+    constructor(public valueFunc: (item: T) => number, public scale: number) {
     }
 
-    addPossibleValue(player: IServerPlayer): void {
-        const value = this.valueFunc(player);
+    addPossibleValue(item: T): void {
+        const value = this.valueFunc(item);
         if (typeof value !== "number") {
             return;
         }
@@ -20,8 +18,8 @@ export default class LikeabilityRange {
         }
     }
 
-    private getPercentile(player: IServerPlayer): number {
-        const value = this.valueFunc(player);
+    private getPercentile(item: T): number {
+        const value = this.valueFunc(item);
         if (typeof this.min !== "number" || typeof this.max !== "number") {
             return 1;
         } else if (typeof value !== "number") {
@@ -37,8 +35,8 @@ export default class LikeabilityRange {
         }
     }
 
-    getScaledPercentile(player: IServerPlayer): number {
-        const percentile = this.getPercentile(player);
+    getScaledPercentile(item: T): number {
+        const percentile = this.getPercentile(item);
         if (typeof percentile !== "number") {
             return undefined;
         }

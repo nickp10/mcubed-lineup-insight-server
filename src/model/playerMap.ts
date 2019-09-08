@@ -1,6 +1,6 @@
 import { IAlternateNameProvider, IServerPlayer } from "../interfaces";
 import { IContest, IPlayer, ITeam, IPlayerStats } from "mcubed-lineup-insight-data";
-import LikeabilityRange from "./likeabilityRange";
+import PercentileUtil from "./percentileUtil";
 
 export default class PlayerMap {
     private players: Map<string, IServerPlayer>;
@@ -60,6 +60,12 @@ export default class PlayerMap {
         return player;
     }
 
+    mergeTeamInsight(teamPercentileCache: Map<string, Map<string, number>>): void {
+        for (const [name, player] of this.players) {
+            
+        }
+    }
+
     async mergePlayer(player: IPlayer, alternateNameProvider: IAlternateNameProvider): Promise<void> {
         const targetPlayer = await this.getPlayer(player.team, player.name, alternateNameProvider);
         if (targetPlayer) {
@@ -94,8 +100,13 @@ export default class PlayerMap {
                     targetStats.push(sourceStat);
                 }
             }
-            if (this.isBattingOrder(player.battingOrder) && !this.isBattingOrder(targetPlayer.battingOrder)) {
-                targetPlayer.battingOrder = player.battingOrder;
+            if (player.mlbSpecific) {
+                if (!targetPlayer.mlbSpecific) {
+                    targetPlayer.mlbSpecific = { };
+                }
+                if (this.isBattingOrder(player.mlbSpecific.battingOrder) && !this.isBattingOrder(targetPlayer.mlbSpecific.battingOrder)) {
+                    targetPlayer.mlbSpecific.battingOrder = player.mlbSpecific.battingOrder;
+                }
             }
             if (player.isStarter && !targetPlayer.isStarter) {
                 targetPlayer.isStarter = player.isStarter;
@@ -111,15 +122,15 @@ export default class PlayerMap {
 
     performPlayerCalculations(pointsPerDollarMultiplier: number): void {
         const likeabilityRanges = [
-            new LikeabilityRange(p => p.projectedPoints, 40),
-            new LikeabilityRange(p => p.projectedPointsPerDollar, 40),
-            new LikeabilityRange(p => p.recentAveragePoints, 15),
-            new LikeabilityRange(p => p.seasonAveragePoints, 5)
+            new PercentileUtil<IServerPlayer>(p => p.projectedPoints, 40),
+            new PercentileUtil<IServerPlayer>(p => p.projectedPointsPerDollar, 40),
+            new PercentileUtil<IServerPlayer>(p => p.recentAveragePoints, 15),
+            new PercentileUtil<IServerPlayer>(p => p.seasonAveragePoints, 5)
         ];
 
         // Aggregate stats from the player stats array onto the player itself
         for (const [name, player] of this.players.entries()) {
-            player.isPlaying = player.isStarter || player.isProbablePitcher;
+            player.isPlaying = player.isStarter || (player.mlbSpecific && player.mlbSpecific.isProbablePitcher);
             player.projectedCeiling = this.performSinglePlayerCalculation(player, ps => ps.projectedCeiling);
             player.projectedFloor = this.performSinglePlayerCalculation(player, ps => ps.projectedFloor);
             player.projectedPoints = this.performSinglePlayerCalculation(player, ps => ps.projectedPoints);
