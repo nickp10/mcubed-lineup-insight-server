@@ -56,7 +56,8 @@ Instances of this class are extensions of the [Player](https://github.com/nickp1
 
 * `isPlaying?: boolean` - Optionally specifies a single boolean that combines if a player is starting or is the probable pitcher (i.e., `isPlaying === isStarter || isProbablePitcher`).
 * `likeability?: number` - Optionally specifies a single number between 0 and 100 determining how much the lineup insight server likes the player (0 indicates hate and 100 indicates love).
-* `oppositionPercentile?: number` - Optionally specific the percentile in which the opposition allows fantasy points at the player's position. For MLB, instead of basing it on the player's position, it is based on the player's handedness. A higher percentile translates to the opposition allowing more fantasy points. A lower percentile translates to the opposition allowing fewer fantasy points. The percentile will always range from 0 to 100.
+* `opponent?: string` - Optionally specifies the team abbreviation for the player's opponent.
+* `oppositionPercentile?: number` - Optionally specifies the percentile in which the player's opposition allows fantasy points at the player's position. For MLB, instead of basing it on the player's position, it is based on the player's handedness. A higher percentile translates to the player's opposition allowing more fantasy points. A lower percentile translates to the player's opposition allowing fewer fantasy points. The percentile will always range from 0 to 100.
 * `projectedPointsPerDollar?: number` - Optionally specifies a number that indicates how many points the player is projected per dollar (based on salary).
 * `projectedCeiling?: number` - Optionally specifies a number that indicates the most number of points the player is projected to obtain.
 * `projectedFloor?: number` - Optionally specifies a number that indicates the least number of points the player is projected to obtain.

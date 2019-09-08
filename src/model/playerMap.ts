@@ -18,20 +18,21 @@ export default class PlayerMap {
             for (let i = 0; i < games.length; i++) {
                 const game = games[i];
                 if (game.awayTeam) {
-                    this.addPlayersFromTeam(game.awayTeam);
+                    this.addPlayersFromTeam(game.awayTeam, game.homeTeam);
                 }
                 if (game.homeTeam) {
-                    this.addPlayersFromTeam(game.homeTeam);
+                    this.addPlayersFromTeam(game.homeTeam, game.awayTeam);
                 }
             }
         }
     }
 
-    private addPlayersFromTeam(team: ITeam): void {
+    private addPlayersFromTeam(team: ITeam, opponent: ITeam): void {
         const players = team.players;
         if (Array.isArray(players)) {
             for (let i = 0; i < players.length; i++) {
-                const player = players[i];
+                const player: IServerPlayer = players[i];
+                player.opponent = opponent.code;
                 this.players.set(`${player.team}-${player.name}`.toLowerCase(), player);
             }
         }
@@ -62,7 +63,29 @@ export default class PlayerMap {
 
     mergeTeamInsight(teamPercentileCache: Map<string, Map<string, number>>): void {
         for (const [name, player] of this.players) {
-            
+            const positionPercentileCache = teamPercentileCache.get(player.opponent);
+            if (positionPercentileCache) {
+                // Should be true for NBA, NFL, and NHL
+                if (positionPercentileCache.has(player.position)) {
+                    player.oppositionPercentile = positionPercentileCache.get(player.position);
+                }
+
+                // Otherwise, check for MLB
+                if (player.mlbSpecific) {
+                    if (player.position === "P") {
+                        const key = `PITCH-${player.mlbSpecific.handednessThrow}`;
+                        if (positionPercentileCache.has(key)) {
+                            player.oppositionPercentile = positionPercentileCache.get(key);
+                        }
+                    }
+                    else {
+                        const key = `BAT-${player.mlbSpecific.handednessBat}`;
+                        if (positionPercentileCache.has(key)) {
+                            player.oppositionPercentile = positionPercentileCache.get(key);
+                        }
+                    }
+                }
+            }
         }
     }
 
