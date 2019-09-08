@@ -43,7 +43,7 @@ export default class Persistence {
 
     private async connectDB(): Promise<Db> {
         if (!this.client) {
-            this.client = await MongoClient.connect(this.mongoConnectionUrl, { useNewUrlParser: true });
+            this.client = await MongoClient.connect(this.mongoConnectionUrl, { useNewUrlParser: true, useUnifiedTopology: true });
         }
         if (!this.db) {
             this.db = this.client.db(this.mongoDBName);
