@@ -251,6 +251,8 @@ export default class ServerContestCreator {
             new PercentileUtil<IServerPlayer>(p => p.recentAveragePoints, 15),
             new PercentileUtil<IServerPlayer>(p => p.seasonAveragePoints, 5)
         ];
+        const positionProjectedPointsPercentiles = new Map<string, PercentileUtil<IServerPlayer>>();
+        const positionProjectedPointsPerDollarPercentiles = new Map<string, PercentileUtil<IServerPlayer>>();
 
         // Aggregate stats from the player stats array onto the player itself
         for (const [name, player] of this.players) {
@@ -260,11 +262,28 @@ export default class ServerContestCreator {
             player.projectedPoints = this.performSinglePlayerCalculation(player, ps => ps.projectedPoints);
             player.recentAveragePoints = this.performSinglePlayerCalculation(player, ps => ps.recentAveragePoints);
             player.seasonAveragePoints = this.performSinglePlayerCalculation(player, ps => ps.seasonAveragePoints);
-            const points = player.projectedPoints || 0;
+            const projectedPoints = player.projectedPoints;
             const salary = player.salary;
-            player.projectedPointsPerDollar = salary ? (points / salary) * pointsPerDollarMultiplier : undefined;
+            if (typeof projectedPoints === "number" && typeof salary === "number") {
+                player.projectedPointsPerDollar = salary === 0 ? 0 : (projectedPoints / salary) * pointsPerDollarMultiplier;
+            }
             for (const likeabilityRange of likeabilityRanges) {
                 likeabilityRange.addPossibleValue(player);
+            }
+            for (const position of this.getPlayerLabeledPositions(player)) {
+                let positionProjectedPointsPercentile = positionProjectedPointsPercentiles.get(position);
+                if (!positionProjectedPointsPercentile) {
+                    positionProjectedPointsPercentile = new PercentileUtil<IServerPlayer>(p => p.projectedPoints, 100);
+                    positionProjectedPointsPercentiles.set(position, positionProjectedPointsPercentile);
+                }
+                positionProjectedPointsPercentile.addPossibleValue(player);
+
+                let positionProjectedPointsPerDollarPercentile = positionProjectedPointsPerDollarPercentiles.get(position);
+                if (!positionProjectedPointsPerDollarPercentile) {
+                    positionProjectedPointsPerDollarPercentile = new PercentileUtil<IServerPlayer>(p => p.projectedPointsPerDollar, 100);
+                    positionProjectedPointsPerDollarPercentiles.set(position, positionProjectedPointsPerDollarPercentile);
+                }
+                positionProjectedPointsPerDollarPercentile.addPossibleValue(player);
             }
         }
 
@@ -275,7 +294,46 @@ export default class ServerContestCreator {
                 const scaledPercentile = likeabilityRange.getScaledPercentile(player);
                 player.likeability += typeof scaledPercentile === "number" ? scaledPercentile : 0;
             }
+            for (const position of this.getPlayerLabeledPositions(player)) {
+                const positionProjectedPointsPercentile = positionProjectedPointsPercentiles.get(position);
+                if (positionProjectedPointsPercentile) {
+                    const percentile = positionProjectedPointsPercentile.getScaledPercentile(player);
+                    if (typeof percentile === "number") {
+                        if (!player.projectedPointsPercentiles) {
+                            player.projectedPointsPercentiles = [];
+                        }
+                        player.projectedPointsPercentiles.push({
+                            position,
+                            percentile
+                        });
+                    }
+                }
+
+                const positionProjectedPointsPerDollarPercentile = positionProjectedPointsPerDollarPercentiles.get(position);
+                if (positionProjectedPointsPerDollarPercentile) {
+                    const percentile = positionProjectedPointsPerDollarPercentile.getScaledPercentile(player);
+                    if (typeof percentile === "number") {
+                        if (!player.projectedPointsPerDollarPercentiles) {
+                            player.projectedPointsPerDollarPercentiles = [];
+                        }
+                        player.projectedPointsPerDollarPercentiles.push({
+                            position,
+                            percentile
+                        });
+                    }
+                }
+            }
         }
+    }
+
+    private getPlayerLabeledPositions(player: IServerPlayer): string[] {
+        const positions: string[] = [];
+        for (const position of this.cachedContest.positions) {
+            if (position.eligiblePlayerPositions && position.eligiblePlayerPositions.indexOf(player.position) > -1) {
+                positions.push(position.label);
+            }
+        }
+        return positions;
     }
 
     private performSinglePlayerCalculation(player: IServerPlayer, func: (playerStat: IPlayerStats) => number): number {

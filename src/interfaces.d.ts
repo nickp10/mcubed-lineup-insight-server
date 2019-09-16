@@ -43,10 +43,17 @@ export interface IServerPlayer extends IPlayer {
     likeability?: number;
     opponent?: string;
     oppositionPercentile?: number;
+    projectedPointsPercentiles?: IPositionPercentile[];
     projectedPointsPerDollar?: number;
+    projectedPointsPerDollarPercentiles?: IPositionPercentile[];
     projectedCeiling?: number;
     projectedFloor?: number;
     projectedPoints?: number;
     recentAveragePoints?: number;
     seasonAveragePoints?: number;
+}
+
+export interface IPositionPercentile {
+    position: string;
+    percentile: number;
 }
