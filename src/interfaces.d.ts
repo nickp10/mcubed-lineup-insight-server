@@ -1,4 +1,4 @@
-import { IPlayer, Sport } from "mcubed-lineup-insight-data";
+import { IContest, IGame, IPlayer, ITeam, Sport } from "mcubed-lineup-insight-data";
 import { ObjectID } from "bson";
 
 export interface IAlternateName {
@@ -23,6 +23,19 @@ export interface IAlternateNameProvider {
     getMissingName(name: string): IMissingName;
     reload(): Promise<void>;
     saveUpdates(): Promise<void>;
+}
+
+export interface IServerContest extends IContest {
+    games?: IServerGame[];
+}
+
+export interface IServerGame extends IGame {
+    awayTeam: IServerTeam;
+    homeTeam: IServerTeam;
+}
+
+export interface IServerTeam extends ITeam {
+    players?: IServerPlayer[];
 }
 
 export interface IServerPlayer extends IPlayer {
