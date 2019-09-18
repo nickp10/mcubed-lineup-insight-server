@@ -35,24 +35,33 @@ Accessing the Data
 ----
 Accessing the data is done using the read operation via the RESTful GET verb. The URL to the data will be:
 
-`http://{server-name}:{server-port}/{contest-id}/{player-id}`
+`http://{server-name}:{server-port}`
 
 * *server-name* - **Required.** Indicates the server name or IP address on which the lineup insight server is running.
 * *server-port* - **Required.** Indicates the server port on which the lineup insight server is running.
-* *contest-id* - **Optional.** If specified, *player-id* becomes required. Indicates the ID of the contest to retrieve a player card for.
-* *player-id* - **Optional.** If specified, *contest-id* becomes required. Indicates the ID of the player to retrieve a player card for.
 
 The HTTP endpoints that are exposed are:
 
-* *GET /* - Retrieves the contest list and all corresponding insight data. This will return a [Contest](https://github.com/nickp10/mcubed-lineup-insight-data#Contest)[].
-* *GET /{contest-id}/{player-id}* - Retrieves the player card for a single player. This will return a [PlayerCard](https://github.com/nickp10/mcubed-lineup-insight-data#PlayerCard).
+* *GET /contest-list/full* - Retrieves the contest list and all corresponding insight data. This will return a [Contest](https://github.com/nickp10/mcubed-lineup-insight-data#Contest)[].
+* *GET /contest-list/summary* - Retrieves the contest list containing only summary information. This will return a [ServerContestSummary](#ServerContestSummary)[].
+* *GET /contest-data/{contest-id}* - Retrieves the contest data with its corresponding insight data for a specific contest. This will return a [Contest](https://github.com/nickp10/mcubed-lineup-insight-data#Contest). *contest-id* is required and indicates the ID of the contest to retrieve the data for.
+* *GET /player-card/{contest-id}/{player-id}* - Retrieves the player card for a single player. This will return a [PlayerCard](https://github.com/nickp10/mcubed-lineup-insight-data#PlayerCard). *contest-id* is required and indicates the ID of the contest to retrieve a player card for. *player-id* is required and indicates the ID of the player to retrieve a player card for.
 
-API / ServerPlayer
+API
 ----
-The data returned via the HTTP server follows the same API as defined by [mcubed-lineup-insight-data](https://github.com/nickp10/mcubed-lineup-insight-data#InsightData). The only difference is that this module adds more properties to the [Player](https://github.com/nickp10/mcubed-lineup-insight-data#Player) class.
+The data returned via the HTTP server follows the same API as defined by [mcubed-lineup-insight-data](https://github.com/nickp10/mcubed-lineup-insight-data#InsightData). However, this module contains the following additional data elements.
+
+#### <a name="ServerContestSummary"></a>SeverContestSummary
+Instances of this class are returned when hitting the summary contest-list endpoint.
+
+* `contestType: ContestType` - Specifies the [ContestType](https://github.com/nickp10/mcubed-lineup-insight-data#ContestType).
+* `ID: string` - Specifies a unique identifier for the contest.
+* `label: string` - Specifies a label describing the contest.
+* `sport: Sport` - Specifies the [Sport](https://github.com/nickp10/mcubed-lineup-insight-data#Sport).
+* `startTime?: Date` - Optionally specifies the start time for the contest.
 
 #### <a name="ServerPlayer"></a>ServerPlayer
-Instances of this class are extensions of the [Player](https://github.com/nickp10/mcubed-lineup-insight-data#Player) class.
+Instances of this class are extensions of the [Player](https://github.com/nickp10/mcubed-lineup-insight-data#Player) class. When retrieving the full contest-list or a specific contest-data, the players nested in the contest data will contain these data elements along with the data elements from the parent [Player](https://github.com/nickp10/mcubed-lineup-insight-data#Player) class.
 
 * `isPlaying?: boolean` - Optionally specifies a single boolean that combines if a player is starting or is the probable pitcher (i.e., `isPlaying === isStarter || isProbablePitcher`).
 * `likeability?: number` - Optionally specifies a single number between 0 and 100 determining how much the lineup insight server likes the player (0 indicates hate and 100 indicates love).
